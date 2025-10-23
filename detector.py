@@ -32,8 +32,8 @@ mp_draw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 # set to 2 when use webcam 
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 648)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
 print("🎥 MediaPipe Hand detector initialized.")
 
 dir_history = deque(maxlen=5)
@@ -146,7 +146,7 @@ while True:
     prev_time = curr_time
 
     # === FPS描画 ===
-    cv2.putText(frame, f"FPS: {int(fps)}", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    cv2.putText(frame, f"FPS: {int(fps)}", (20, 135), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
     cv2.imshow("Hand Tracking Terminal", frame)
     if cv2.waitKey(1) & 0xFF == 27:
