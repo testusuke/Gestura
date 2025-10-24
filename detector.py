@@ -116,10 +116,10 @@ while True:
         stable_shoot = False
         spread = 0.0
 
-    # 
-    threading.Thread(
-        target=emit_hand_data, args=(stable_dir, stable_shoot, float(spread)), daemon=True
-    ).start()
+    if not no_hand:
+        threading.Thread(
+            target=emit_hand_data, args=(stable_dir, stable_shoot, float(spread)), daemon=True
+            ).start()
 
     if no_hand:
         lines = [
