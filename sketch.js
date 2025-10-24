@@ -13,7 +13,7 @@ let bgY = 0;
 function setup() {
   createCanvas(windowWidth, windowHeight);
   frameRate(60);
-  textFont("monospace");
+  textFont("Agave");
 
   player.x = width / 2;
   player.y = height - 120;
