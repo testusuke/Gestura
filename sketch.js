@@ -64,15 +64,8 @@ function draw() {
     drawGameOver();
   }
 
-  // === 情報表示 ===
-  fill(255);
-  textSize(18);
-  text(`SCORE: ${score}`, 52, 30);
-  text(`STATE: ${gameState}`, 65, 55);
-  text(`HAND: ${handDir}`, 80, 80);
-  text(`SHOOT: ${shooting ? "ON" : "OFF"}`, 62, 105);
-  if (gameState === "PLAY")
-    text(`TIME: ${max(0, (30 - floor((millis() - gameTimer) / 1000)))}`, 60, 130);
+  // === 統一HUD ===
+  drawHUD();
 }
 
 // === デモモード ===
@@ -198,6 +191,45 @@ function checkCollision() {
   }
 }
 
+// === 統一HUD（デバッグ情報） ===
+function drawHUD() {
+  // 背景パネル（半透明）
+  fill(0, 130);
+  stroke(100, 255, 255, 80);
+  strokeWeight(1.2);
+  rect(105, 80, 200, 150, 10);
+  noStroke();
+
+  // テキスト設定
+  fill(255);
+  textAlign(LEFT, TOP);
+  textSize(18);
+  let baseX = 25;
+  let baseY = 25;
+  let lineH = 24;
+
+  // ラベル＋値一覧
+  const info = [
+    ["SCORE", score],
+    ["STATE", gameState],
+    ["HAND", handDir],
+    ["SHOOT", shooting ? "ON" : "OFF"],
+  ];
+  if (gameState === "PLAY") {
+    let remaining = max(0, 30 - floor((millis() - gameTimer) / 1000));
+    info.push(["TIME", remaining]);
+  }
+
+  // 整列表示
+  for (let i = 0; i < info.length; i++) {
+    let [label, value] = info[i];
+    textStyle(BOLD);
+    text(label + ":", baseX, baseY + i * lineH);
+    textStyle(NORMAL);
+    text(value, baseX + 100, baseY + i * lineH);
+  }
+}
+
 // === ゲーム開始 ===
 function startGame() {
   score = 0;
@@ -242,4 +274,3 @@ function setupSocket() {
     console.error("⚠️ Socket connection failed:", err)
   );
 }
-
