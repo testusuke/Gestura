@@ -2,17 +2,19 @@
 let socket;
 let handDir = "CENTER";
 let spread = 0.0;
-let shooting = false;
-
+let shooting = true; // 常時発射ON
 let score = 0;
-let player = { x: 0, y: 0, w: 50, h: 50 };
+let player = { x: 0, y: 0, w: 50, h: 50, vx: 0 };
 let bullets = [];
 let enemies = [];
 
 let gameState = "DEMO"; // "DEMO" | "PLAY" | "GAMEOVER"
 let lastReceived = -1;
 const HAND_LOST_TIMEOUT = 2000; // ms
-let gameTimer = 0; // 秒単位
+const HAND_HELD_START_TIME = 4000; // 4秒連続で検出したら開始
+let handHeldSince = null;
+
+let gameTimer = 0; // ゲーム開始時刻
 let demoTargetX = 0;
 
 function setup() {
@@ -41,15 +43,23 @@ function draw() {
   // === モード制御 ===
   if (gameState === "DEMO") {
     drawDemo();
+
+    // 手が一定時間連続で検出されたらゲーム開始
     if (handDetected) {
-      gameState = "STARTING";
-      setTimeout(() => startGame(), 1000);
+      if (handHeldSince === null) handHeldSince = now;
+      if (now - handHeldSince > HAND_HELD_START_TIME) {
+        gameState = "STARTING";
+        setTimeout(() => startGame(), 500);
+        handHeldSince = null;
+      }
+    } else {
+      handHeldSince = null;
     }
+
   } else if (gameState === "PLAY") {
     drawGame();
-    if (!handDetected) {
-      if (millis() - lastReceived > 10000) endGame("NO HAND");
-    }
+    if (!handDetected && now - lastReceived > 10000) endGame("NO HAND");
+
   } else if (gameState === "GAMEOVER") {
     drawGameOver();
   }
@@ -72,43 +82,63 @@ function drawDemo() {
   textAlign(CENTER, CENTER);
   text("DEMO MODE", width / 2, height / 2 - 100);
 
-  // プレイヤー自動移動（実プレイ速度で反転）
-  if (!player.vx) player.vx = 6;
+  // --- プレイヤー挙動 ---
+  if (frameCount % int(random(90, 150)) === 0) {
+    // ランダム方向転換
+    player.vx = random([-6, -4, 4, 6]);
+  }
   player.x += player.vx;
   if (player.x < 25 || player.x > width - 25) {
     player.vx *= -1;
   }
 
-  // 弾幕：実プレイと同等スパンで常時発射
+  // 常時弾幕
   if (frameCount % 5 === 0) {
     bullets.push({ x: player.x, y: player.y - 25 });
   }
 
-  handlePlayer();      // プレイヤー描画
-  updateBullets();     // 弾更新
-  if (frameCount % 45 === 0)
-    enemies.push({ x: width / 2 + sin(frameCount / 30) * width / 3, y: -40 });
-  updateEnemies();     // 敵更新
-  checkCollision();    // 当たり判定
+  handlePlayer();
+  updateBullets();
+
+  // --- 敵出現（徐々に難易度上昇） ---
+  let interval = max(20, 60 - frameCount / 180); // 徐々に短く
+  if (frameCount % int(interval) === 0) {
+    enemies.push({
+      x: random(width * 0.1, width * 0.9),
+      y: -40,
+      speed: random(2, 4 + frameCount / 2000)
+    });
+  }
+
+  updateEnemies();
+  checkCollision();
 }
 
 // === ゲームプレイ ===
 function drawGame() {
   handlePlayer();
 
-  if (shooting && frameCount % 5 === 0) {
+  // 弾は常時発射ON
+  if (frameCount % 5 === 0) {
     bullets.push({ x: player.x, y: player.y - 25 });
   }
 
   updateBullets();
 
-  if (frameCount % 45 === 0)
-    enemies.push({ x: width / 2 + sin(frameCount / 30) * width / 3, y: -40 });
+  // 敵出現（後半で難易度上昇）
+  let elapsed = (millis() - gameTimer) / 1000;
+  let interval = max(15, 45 - elapsed);
+  if (frameCount % int(interval) === 0) {
+    enemies.push({
+      x: random(width * 0.1, width * 0.9),
+      y: -40,
+      speed: random(3, 3 + elapsed / 10)
+    });
+  }
 
   updateEnemies();
   checkCollision();
 
-  // タイマー処理
   if (millis() - gameTimer >= 30000) {
     endGame("TIME UP");
   }
@@ -140,7 +170,7 @@ function updateBullets() {
 function updateEnemies() {
   fill(255, 80, 80);
   for (let i = enemies.length - 1; i >= 0; i--) {
-    enemies[i].y += 3;
+    enemies[i].y += enemies[i].speed || 3;
     rectMode(CENTER);
     rect(enemies[i].x, enemies[i].y, 40, 40);
     if (enemies[i].y > height) enemies.splice(i, 1);
@@ -153,7 +183,6 @@ function checkCollision() {
     for (let j = bullets.length - 1; j >= 0; j--) {
       let e = enemies[i];
       let b = bullets[j];
-      // AABB判定（矩形）
       if (
         b.x > e.x - 20 &&
         b.x < e.x + 20 &&
@@ -200,20 +229,17 @@ function drawGameOver() {
 // === ソケットIO ===
 function setupSocket() {
   socket = io("http://127.0.0.1:9001");
-
-  socket.on("connect", () => {
-    console.log("🔌 Connected to Socket.IO server");
-  });
+  socket.on("connect", () => console.log("🔌 Connected to Socket.IO server"));
 
   socket.on("hand", (data) => {
-    if (data.dir === "NO HAND") return; // NOHANDは無視
     handDir = data.dir;
     spread = data.spread;
-    shooting = data.shoot;
+    shooting = true; // 常時ON
     lastReceived = millis();
   });
 
-  socket.on("connect_error", (err) => {
-    console.error("⚠️ Socket connection failed:", err);
-  });
+  socket.on("connect_error", (err) =>
+    console.error("⚠️ Socket connection failed:", err)
+  );
 }
+
