@@ -73,7 +73,7 @@ function drawDemo() {
   fill(255);
   textSize(60);
   textAlign(CENTER, CENTER);
-  text("DEMO MODE", width / 2, height / 2 - 100);
+  text("🤖 DEMO MODE 🕹", width / 2, height / 2 - 100);
 
   // --- プレイヤー挙動 ---
   if (frameCount % int(random(90, 150)) === 0) {
