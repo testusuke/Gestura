@@ -1,48 +1,174 @@
-# Gestura
-An interactive web-based **shooting game** powered by **MediaPipe**, **OpenCV**, and **p5.js**.  
-Players control the ship using **hand gestures** — no keyboard or mouse required.  
-This project was originally built for **exhibition and festival demonstrations** where visitors can play without touching any device.
+# 🖐️ Hand Tracking Shooting Game
+
+An interactive **web-based shooting game** powered by **MediaPipe**, **OpenCV**, and **p5.js**.  
+You control the ship using your **hand gestures** — no keyboard or mouse required.  
+Originally developed for **exhibitions** (e.g., school festivals) to allow hands-free gameplay.
 
 ---
 
 ## 🚀 Overview
 
-- **Camera-based gameplay** using MediaPipe hand tracking  
-- Real-time connection between **Python (backend)** and **p5.js (frontend)** via **Socket.IO**
-- **Demo mode** activates automatically when no player is detected  
+- Real-time **hand tracking** with MediaPipe Hands  
+- **Python backend** (hand detection) ↔ **p5.js frontend** (browser game) via Socket.IO  
+- **Demo Mode** starts automatically when no hand is detected  
 - **Game starts** after 4 seconds of continuous hand detection  
 - **Game ends** after 30 seconds or 10 seconds of hand loss  
-- **Automatic restart** to demo mode — fully unattended operation  
-- Compatible with both **built-in** and **external USB webcams**
+- Automatically returns to Demo Mode for unattended operation  
+- Works with both **internal** and **external** webcams  
 
 ---
 
-## 🧩 Confirmed Environment
-
-This project has been tested under the following environment:
+## 🧠 Verified Environment
 
 | Component | Version / Hardware |
 |------------|--------------------|
-| OS | Ubuntu 22.04 LTS (also tested on Windows 11) |
+| OS | Ubuntu 22.04 LTS|
 | Python | 3.10.12 |
 | OpenCV | 4.10+ |
 | MediaPipe | 0.10+ |
 | Flask | 3.0+ |
 | python-socketio | 5.11+ |
-| Hardware | Lenovo ThinkPad E14 Gen5 (Ryzen 5 7530U) |
-| Camera | Integrated 720p & External USB HD Camera |
+| Hardware | ThinkPad E14 Gen5 (Ryzen 5 7530U / 24GB RAM) |
+| Camera | Integrated 720p + USB HD external camera |
 
-💡 *Works on Windows, macOS, or most modern Linux distributions.*
+Runs smoothly at **25–30 FPS** on most mid-range laptops.  
+No GPU required.
 
 ---
 
 ## ⚙️ Dependencies
 
-You’ll need the following Python packages:
+Install the required packages as follows:
 
-```bash
+```
 pip install opencv-python mediapipe flask python-socketio Werkzeug numpy
-
--## ⚙️ Dependencies
+```
 
 ---
+
+## ▶️ How to Run the Project
+
+### 1️⃣ Clone this repository
+```
+git clone https://github.com/hakase61912/Gestura.git
+
+cd Gestura
+```
+
+### 2️⃣ Install dependencies
+```
+pip install opencv-python mediapipe flask python-socketio Werkzeug numpy
+```
+
+### 3️⃣ Start the hand tracking server
+```
+python3 detector.py
+```
+
+- Opens your webcam and begins hand tracking  
+- Displays FPS, hand state, and direction info  
+- Starts the Socket.IO server at: `http://127.0.0.1:9001`
+
+#### 💡 Using an external camera
+Open `detector.py` and change:
+```python
+cap = cv2.VideoCapture(0)
+```
+→ Replace `0` with the camera index (`1`, `2`, etc.) according to your environment.  
+
+Check available devices (Linux only):
+```
+v4l2-ctl --list-devices
+```
+
+On Windows, use the built-in **Camera app** to determine which device number to use.
+
+---
+
+### 4️⃣ Run the game in your browser
+Open another terminal and run:
+```
+python3 -m http.server 8000
+```
+
+Then visit:
+```
+http://127.0.0.1:8000
+```
+
+**Behavior:**
+- Starts in **DEMO MODE** (ship moves automatically)  
+- Detects a hand held in view for 4 seconds → **Game starts**  
+- If no hand detected for 10 seconds → **Game over**  
+- Game automatically ends after 30 seconds and returns to Demo Mode  
+
+---
+
+### 5️⃣ Stop the program
+- Press `Ctrl + C` in both terminals  
+- Close the browser tab  
+
+---
+
+## 🕹️ Controls
+
+| Action | Gesture |
+|--------|----------|
+| Move Left | Tilt or move hand left |
+| Move Right | Tilt or move hand right |
+| Shoot | Automatically fires continuously |
+| Start | Keep hand visible for 4 seconds |
+| End | Remove hand for 10 seconds |
+
+Session duration: **30 seconds**
+
+---
+
+## 📁 Folder Structure
+
+```
+.
+├── detector.py          # Hand tracking server (MediaPipe + Socket.IO)
+└── GAME/
+    ├── index.html       # HTML entry point
+    └── sketch.js        # Main game logic (p5.js)
+```
+
+---
+
+## 🧩 Troubleshooting
+
+| Problem | Solution |
+|----------|-----------|
+| Camera not found | Change `cv2.VideoCapture(0)` index to `1` or `2` |
+| “Emit error” logs | Harmless; Socket.IO auto-reconnects |
+| Game not starting | Ensure `detector.py` is running before opening browser |
+| Low FPS | Lower camera resolution or improve lighting |
+| Hand not detected | Improve brightness and contrast |
+| External camera unresponsive | Verify device index with `v4l2-ctl --list-devices` |
+
+---
+
+## 🖼️ Exhibition Notes
+
+- Runs **offline** after installation  
+- Perfect for **interactive demos** or **school festivals**  
+- Use strong lighting and stable camera placement  
+- Connect laptop to a **large display** for best visibility  
+- Demo Mode ensures seamless unattended operation  
+
+Recommended camera resolution: **640×480** or **720p**
+
+---
+
+## 📜 License
+
+MIT License  
+© 2025 Hakase61912
+
+---
+
+## 🧑‍💻 Credits
+
+Developed by **Hakase61912**  
+Built with ❤️ using **p5.js**, **OpenCV**, and **MediaPipe**.
