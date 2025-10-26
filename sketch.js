@@ -11,7 +11,7 @@ let enemies = [];
 let gameState = "DEMO"; // "DEMO" | "PLAY" | "GAMEOVER"
 let lastReceived = -1;
 const HAND_LOST_TIMEOUT = 2000; // ms
-const HAND_HELD_START_TIME = 4000; // 4秒連続で検出したら開始
+const HAND_HELD_START_TIME = 2000; // 2秒連続で検出したら開始
 let handHeldSince = null;
 
 let gameTimer = 0; // ゲーム開始時刻
