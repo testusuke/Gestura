@@ -1,3 +1,4 @@
+import base64
 import cv2
 import mediapipe as mp
 import socketio
@@ -41,10 +42,28 @@ shoot_history = deque(maxlen=5)
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 TARGET_HAND = "Both"
+PREVIEW_SIZE = (320, 240)
+JPEG_QUALITY = 60
+DISPLAY_PREVIEW_WINDOW = False
 
-def emit_hand_data(dir, shoot, spread):
+def encode_frame(frame):
     try:
-        sio.emit("hand", {"dir": dir, "shoot": shoot, "spread": spread})
+        preview = cv2.resize(frame, PREVIEW_SIZE)
+        success, buffer = cv2.imencode(
+            ".jpg", preview, [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY]
+        )
+        if not success:
+            return None
+        return base64.b64encode(buffer).decode("utf-8")
+    except Exception:
+        return None
+
+def emit_hand_data(dir, shoot, spread, frame_b64):
+    payload = {"dir": dir, "shoot": shoot, "spread": spread}
+    if frame_b64:
+        payload["frame"] = frame_b64
+    try:
+        sio.emit("hand", payload)
         # print(f"→ SEND: dir={dir}, shoot={shoot}")
     except Exception as e:
         # print("Emit error:", e)
@@ -116,10 +135,13 @@ while True:
         stable_shoot = False
         spread = 0.0
 
-    if not no_hand:
-        threading.Thread(
-            target=emit_hand_data, args=(stable_dir, stable_shoot, float(spread)), daemon=True
-            ).start()
+    frame_b64 = encode_frame(frame)
+
+    threading.Thread(
+        target=emit_hand_data,
+        args=(stable_dir, stable_shoot, float(spread), frame_b64),
+        daemon=True,
+    ).start()
 
     if no_hand:
         lines = [
@@ -148,9 +170,10 @@ while True:
     # === FPS描画 ===
     cv2.putText(frame, f"FPS: {int(fps)}", (20, 135), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-    cv2.imshow("Hand Tracking Terminal", frame)
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+    if DISPLAY_PREVIEW_WINDOW:
+        cv2.imshow("Hand Tracking Terminal", frame)
+        if cv2.waitKey(1) & 0xFF == 27:
+            break
 
 cap.release()
 cv2.destroyAllWindows()

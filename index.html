@@ -13,8 +13,28 @@
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     canvas { display: block; }
+    #camera-feed {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 260px;
+      border: 2px solid rgba(0, 255, 255, 0.6);
+      border-radius: 8px;
+      box-shadow: 0 0 12px rgba(0, 255, 255, 0.35);
+      image-rendering: auto;
+      background: #000;
+      color: rgba(0, 255, 255, 0.7);
+      font-family: "Agave", "Fira Mono", monospace;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
+  <div id="camera-feed">Socket disconnected</div>
 </body>
 </html>
